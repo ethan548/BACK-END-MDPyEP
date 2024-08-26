@@ -1,0 +1,4 @@
+npx prisma migrate dev --name allTables
+npx prisma generate
+npm update @prisma/client
+npm i @prisma/client@latest

@@ -1,0 +1,602 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Empresa{
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  idOrden Int @unique
+  //tipo String
+  programado tablaVentasProgramado?
+  proyectado tablaVentasProyectado?
+  ejecutado tablaVentasEjecutado?
+  empPrPy tablaVentasPrVsPy?
+  tablaEje2023 tablaVentasEjecutado2023?
+  tablaIngEgr tablaIngresosEgresos?
+  tablaProduccion TablaProduccion[]
+  tablaSaldos tablaSaldos?
+  tablaCapacidad tablaCapacidad[]
+}
+
+
+// *********************************8 SECCION VENTAS ******************************8
+model tablaVentasProgramado {
+  // id Int @id @default(autoincrement())
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaVentasProyectado {
+  // id Int @id @default(autoincrement())
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaVentasEjecutado{
+  // id Int @id @default(autoincrement())
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaVentasPrVsPy{
+  // id Int @id @default(autoincrement())
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  registro String
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaVentasEjecutado2023{
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+//************************************8 SECCION INGRESOS Y EGRESOS **********************************************
+model tablaIngresosEgresos {
+  id         Int           @id @default(autoincrement())
+  empId      Int           @unique
+  idempresa  Empresa       @relation(fields: [empId], references: [id])
+  ingresos   tablaIngresos?
+  egresos    tablaEgresos?
+  ingPrPy tablaIngresosPrVsPy?
+  egrPrPy tablaEgresosPrVsPy?
+}
+
+model tablaEgresosPrVsPy{
+  id         Int @id @default(autoincrement())
+  empId      Int @unique
+  idempresa  tablaIngresosEgresos @relation(fields: [empId], references: [empId])
+  registro String
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaIngresosPrVsPy{
+  id         Int @id @default(autoincrement())
+  empId      Int @unique
+  idempresa  tablaIngresosEgresos @relation(fields: [empId], references: [empId])
+  registro String
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaIngresos {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  // se esta cambiando id por empId
+  idempresa  tablaIngresosEgresos    @relation(fields: [empId], references: [empId])
+  ingProg    tablaIngresosProg?
+  ingProy    tablaIngresosProy?
+  ingEj      tablaIngresosEje?
+  ingEj2023  tablaIngresosEje2023?
+}
+
+model tablaIngresosProg {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  // Se cambio id por empId
+  idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaIngresosProy {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  // se cambio id por empId
+  idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaIngresosEje {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  // se cambio id por empId
+  idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaIngresosEje2023 {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  // se cambio id por empId
+  idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaEgresos {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  idempresa  tablaIngresosEgresos    @relation(fields: [empId], references: [empId])
+  tablaEgrProg    tablaEgresosProg?
+  tablaEgrProy    tablaEgresosProy?
+  tablaEgrEj      tablaEgresosEj?
+  tablaEgrEj2023  tablaEgresosEj2023?
+}
+
+model tablaEgresosProg {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaEgresosProy {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaEgresosEj {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+model tablaEgresosEj2023 {
+  id         Int            @id @default(autoincrement())
+  empId      Int            @unique
+  idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  ene        Float
+  feb        Float
+  mar        Float
+  abr        Float
+  may        Float
+  jun        Float
+  jul        Float
+  ago        Float
+  sep        Float
+  oct        Float
+  nov        Float
+  dic        Float
+}
+
+// ************************************* PRODUCCION **********************************************
+
+model TablaProduccion {
+  id                  Int                   @id @default(autoincrement())
+  empresaId           Int                   @unique
+  empresa             Empresa               @relation(fields: [empresaId], references: [id])
+  tablaProgProduc     TablaProduccionProg[]
+  tablaProyProduc     TablaProduccionProy[]
+  tablaEjeProduc      TablaProduccionEjec[]
+  tablaEje2023Produc  TablaProduccionEjec2023[]
+  tablaProdPrVsPy     TablaProduccionPrVsPy[]
+}
+
+model TablaProduccionPrVsPy{
+  id                  Int                   @id @default(autoincrement())
+  produccionId        Int
+  tablaProduccion     TablaProduccion       @relation(fields: [produccionId], references: [empresaId])
+  registro            String
+  producto            String
+  medida              String
+  ene                 Float
+  feb                 Float
+  mar                 Float
+  abr                 Float
+  may                 Float
+  jun                 Float
+  jul                 Float
+  ago                 Float
+  sep                 Float
+  oct                 Float
+  nov                 Float
+  dic                 Float
+}
+
+model TablaProduccionProg {
+  id                  Int               @id @default(autoincrement())
+  produccionId        Int
+  tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  producto            String
+  medida              String
+  ene                 Float
+  feb                 Float
+  mar                 Float
+  abr                 Float
+  may                 Float
+  jun                 Float
+  jul                 Float
+  ago                 Float
+  sep                 Float
+  oct                 Float
+  nov                 Float
+  dic                 Float
+}
+model TablaProduccionProy {
+  id                  Int               @id @default(autoincrement())
+  produccionId        Int
+  tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  producto            String
+  medida              String
+  ene                 Float
+  feb                 Float
+  mar                 Float
+  abr                 Float
+  may                 Float
+  jun                 Float
+  jul                 Float
+  ago                 Float
+  sep                 Float
+  oct                 Float
+  nov                 Float
+  dic                 Float
+}
+
+model TablaProduccionEjec {
+  id                  Int               @id @default(autoincrement())
+  produccionId        Int
+  tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  producto            String
+  medida              String
+  ene                 Float
+  feb                 Float
+  mar                 Float
+  abr                 Float
+  may                 Float
+  jun                 Float
+  jul                 Float
+  ago                 Float
+  sep                 Float
+  oct                 Float
+  nov                 Float
+  dic                 Float
+}
+
+model TablaProduccionEjec2023 {
+  id                  Int               @id @default(autoincrement())
+  produccionId        Int
+  tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  producto            String
+  medida              String
+  ene                 Float
+  feb                 Float
+  mar                 Float
+  abr                 Float
+  may                 Float
+  jun                 Float
+  jul                 Float
+  ago                 Float
+  sep                 Float
+  oct                 Float
+  nov                 Float
+  dic                 Float
+}
+
+
+// ************************************8 SALDOS EN LIBRETA **********************************************
+
+model tablaSaldos{
+  id Int @id @default(autoincrement())
+  idempresa Empresa @relation(fields: [empId], references: [id])
+  empId Int @unique
+  disponible tablaSaldosDisponible?
+  inventarios tablaSaldosInventarios?
+  cobrar tablaSaldosCobrar?
+  pagar tablaSaldosPagar?
+}
+
+model tablaSaldosDisponible{
+  idempresa tablaSaldos @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaSaldosInventarios{
+  idempresa tablaSaldos @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaSaldosCobrar{
+  idempresa tablaSaldos @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+model tablaSaldosPagar{
+  idempresa tablaSaldos @relation(fields: [empId], references: [id])
+  empId Int @unique
+  ene Float
+  feb Float
+  mar Float
+  abr Float
+  may Float
+  jun Float
+  jul Float
+  ago Float
+  sep Float
+  oct Float
+  nov Float
+  dic Float
+}
+
+//*******************************************CAPACIDAD*****************************
+model tablaCapacidad {
+  id                Int                        @id @default(autoincrement())
+  empId             Int
+  empresa           Empresa                    @relation(fields: [empId], references: [id], onDelete: Cascade)
+  lineas            tablaCapacidadLineas[]     // Relación con tablaLineasCapacidad
+}
+
+model tablaCapacidadLineas {
+  id                Int                        @id @default(autoincrement())
+  tablaCapacidadId  Int
+  tablaCapacidad    tablaCapacidad             @relation(fields: [tablaCapacidadId], references: [id], onDelete: Cascade)
+  linea             String
+  cantidad          tablaCapacidadCantidades?  // Relación con tablaCantidadesCapacidad
+  medida            tablaCapacidadMedidas?     // Relación con tablaMedidasCapacidad
+  prg               tablaCapacidadProg?        // Relación con tablaProgCapacidad
+  eje               tablaCapacidadEjec?        // Relación con tablaEjecCapacidad
+}
+
+model tablaCapacidadCantidades {
+  id                Int                        @id @default(autoincrement())
+  tablaLineasId     Int @unique
+  tablaLineas       tablaCapacidadLineas       @relation(fields: [tablaLineasId], references: [id], onDelete: Cascade)
+  cantidad          Float
+}
+
+model tablaCapacidadMedidas {
+  id                Int                        @id @default(autoincrement())
+  tablaLineasId     Int @unique
+  tablaLineas       tablaCapacidadLineas       @relation(fields: [tablaLineasId], references: [id], onDelete: Cascade)
+  medida            String
+}
+
+model tablaCapacidadProg {
+  id                Int                        @id @default(autoincrement())
+  tablaLineasId     Int @unique
+  tablaLineas       tablaCapacidadLineas       @relation(fields: [tablaLineasId], references: [id], onDelete: Cascade)
+  ene               Float
+  feb               Float
+  mar               Float
+  abr               Float
+  may               Float
+  jun               Float
+  jul               Float
+  ago               Float
+  sep               Float
+  oct               Float
+  nov               Float
+  dic               Float
+}
+
+model tablaCapacidadEjec {
+  id                Int                        @id @default(autoincrement())
+  tablaLineasId     Int @unique
+  tablaLineas       tablaCapacidadLineas       @relation(fields: [tablaLineasId], references: [id], onDelete: Cascade)
+  ene               Float
+  feb               Float
+  mar               Float
+  abr               Float
+  may               Float
+  jun               Float
+  jul               Float
+  ago               Float
+  sep               Float
+  oct               Float
+  nov               Float
+  dic               Float
+}
