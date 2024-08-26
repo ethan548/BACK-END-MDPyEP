@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx prisma migrate dev --name allTables && npx prisma generate && node index.js"
+    "build": "prisma migrate deploy",
+    "start": "node index.js",
+    "postinstall": "prisma generate"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
   },
   "keywords": [],
   "author": "Ethan",
