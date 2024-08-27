@@ -60,16 +60,16 @@ export function transformProduccion(filePath) {
         }
       }
     });
-    // const nuevosAcopio = ObtenerAcopio();
-    // nuevosAcopio.map((element) => {
-    //     result.push(element);
-    // });
+    const nuevosAcopio = ObtenerAcopio();
+    nuevosAcopio.map((element) => {
+        result.push(element);
+    });
     // const nuevosCapacidad = ObtenerCapacidad();
     // nuevosCapacidad.map((element) => {
     //     result.push(element);
     // });
-    // result2 = [];
-    // result3 = [];
+    result2 = [];
+    result3 = [];
     // console.log(nuevosAcopio);
     // console.log(result);
     return result;
@@ -180,6 +180,7 @@ function Acopio(jsonData, key) {
             producto: "ACOPIO "+lin,
             medida: med,
             pr: defPr,
+            py: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // nuevo 
             ej: defEj,
             ej2023: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
           });
@@ -252,6 +253,7 @@ function Capacidad(jsonData, key) {
             producto: linCapa,
             medida: medCapa,
             pr: defPrCapa,
+            py: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // nuevo
             ej: defEjCapa,
             ej2023: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
           });

@@ -135,6 +135,7 @@ export async function mainIngreYEgre(resultIngEgre) {
   
     // // Si la empresa existe, crear el registro EmpPrPy
     if (empresa) {
+      // console.log(empresa);
       return prisma.tablaIngresosEgresos.create({
         data: {
           // empId: empresa.id,
@@ -144,6 +145,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               // empId: empresa.id,
               ingProg: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.ingreso[0].pr[0],
                   feb: element.ingreso[0].pr[1],
                   mar: element.ingreso[0].pr[2],
@@ -160,6 +162,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               ingProy: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.ingreso[1].py[0],
                   feb: element.ingreso[1].py[1],
                   mar: element.ingreso[1].py[2],
@@ -176,6 +179,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               ingEj: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.ingreso[2].ej[0],
                   feb: element.ingreso[2].ej[1],
                   mar: element.ingreso[2].ej[2],
@@ -192,6 +196,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               ingEj2023: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.ingreso[3].ej2023[0],
                   feb: element.ingreso[3].ej2023[1],
                   mar: element.ingreso[3].ej2023[2],
@@ -213,6 +218,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               // empId: empresa.id,
               tablaEgrProg: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.egreso[0].pr[0],
                   feb: element.egreso[0].pr[1],
                   mar: element.egreso[0].pr[2],
@@ -229,6 +235,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               tablaEgrProy: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.egreso[1].py[0],
                   feb: element.egreso[1].py[1],
                   mar: element.egreso[1].py[2],
@@ -245,6 +252,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               tablaEgrEj: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.egreso[2].ej[0],
                   feb: element.egreso[2].ej[1],
                   mar: element.egreso[2].ej[2],
@@ -261,6 +269,7 @@ export async function mainIngreYEgre(resultIngEgre) {
               },
               tablaEgrEj2023: {
                 create: {
+                  empresa: empresa.nombre,
                   ene: element.egreso[3].ej2023[0],
                   feb: element.egreso[3].ej2023[1],
                   mar: element.egreso[3].ej2023[2],
@@ -293,6 +302,7 @@ export async function mainIngreYEgre2() {
   for (const Emp of resultIngEgre) {
     let newRegistro = null;
     let resultado = null;
+    // console.log(Emp,"hello");
     // Buscar la empresa correspondiente
     const tablaIngProg = await prisma.tablaIngresosProg.findFirst({
       where:{
@@ -322,6 +332,7 @@ export async function mainIngreYEgre2() {
     // console.log(resultado);
     ObjectIngresos.push({
         empId: Emp.id,
+        empresa: Emp.nombre,
         registro: newRegistro,
         ene: resultado['ene'],
         feb: resultado['feb'],
@@ -361,6 +372,7 @@ export async function mainIngreYEgre2() {
 
     ObjectEgresos.push({
         empId: Emp.id,
+        empresa: Emp.nombre,
         registro: newRegistro,
         ene: resultado['ene'],
         feb: resultado['feb'],
@@ -392,9 +404,10 @@ export async  function mainProduccion(myNewObject) {
   // Pre-cargar todas las empresas para reducir las consultas a la base de datos
   const empresas = await prisma.Empresa.findMany();
   empresas.forEach(empresa => empresaMap.set(empresa.nombre, empresa.id));
-
+  // console.log(empresas);
   await Promise.all(myNewObject.map(async (element) => {
     const empId = empresaMap.get(element.empresa);
+    // console.log(element.empresa);
     if (empId) {
       // Crear un registro en tablaProduccion vinculado a la empresa
       const produccion = await prisma.TablaProduccion.create({
@@ -407,6 +420,7 @@ export async  function mainProduccion(myNewObject) {
       const progOperations = element.productos.map((producto, i) => {
         return {
           produccionId: produccion.empresaId,  // Cambiado a produccionId
+          empresa: element.empresa,
           producto,
           medida: element.medidas[i],
           ...element.prs[i].reduce((acc, curr, index) => {
@@ -417,18 +431,19 @@ export async  function mainProduccion(myNewObject) {
         };
       });
 
-      //Preparar los datos para tablaProyProduc
+      // Preparar los datos para tablaProyProduc
       const proyOperations = element.productos.map((producto, i) => {
-        return {
-          produccionId: produccion.empresaId,  // Cambiado a produccionId
-          producto,
-          medida: element.medidas[i],
-          ...element.pys[i].reduce((acc, curr, index) => {
-            const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][index];
-            acc[mes] = curr;
-            return acc;
-          }, {})
-        };
+          return {
+            produccionId: produccion.empresaId,  // Cambiado a produccionId
+            empresa: element.empresa,
+            producto,
+            medida: element.medidas[i],
+            ...element.pys[i].reduce((acc, curr, index) => {
+              const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][index];
+              acc[mes] = curr;
+              return acc;
+            }, {})
+          };
       });
 
       // Preparar los datos para tablaEjeProduc
@@ -446,13 +461,14 @@ export async  function mainProduccion(myNewObject) {
 
         return {
           produccionId: produccion.empresaId,  // Cambiado a produccionId
+          empresa: element.empresa,
           producto,
           medida: element.medidas[i],
           ...datosMeses
         };
       });
 
-      // Preparar los datos para tablaEje2023Produc
+      // // Preparar los datos para tablaEje2023Produc
       const eje2023Operations = element.productos.map((producto, i) => {
         const mesesConValoresPorDefecto = {
           ene: 0.00, feb: 0.00, mar: 0.00, abr: 0.00, may: 0.00, jun: 0.00,
@@ -467,17 +483,18 @@ export async  function mainProduccion(myNewObject) {
 
         return {
           produccionId: produccion.empresaId,  // Cambiado a produccionId
+          empresa: element.empresa,
           producto,
           medida: element.medidas[i],
           ...datosMeses
         };
       });
-
       // Crear registros en lote para mejorar la eficiencia
       await prisma.TablaProduccionProg.createMany({
-        data: progOperations
-      });
-
+          data: progOperations
+        });
+        
+      // console.log(proyOperations);
       await prisma.tablaProduccionProy.createMany({
         data: proyOperations
       });
@@ -504,6 +521,7 @@ export async function mainProduccion2() {
   // console.log(empresas);
   await Promise.all(empresas.map(async (element) => {
     const empId = empresaMap.get(element.nombre);
+    // console.log(element);
     if (empId) {
       //Obtener los registros programados
       const produccionProg = await prisma.tablaProduccionProg.findMany({
@@ -530,8 +548,10 @@ export async function mainProduccion2() {
             resultado = produccionProy[index]
 
           }
+          // console.log(element);
           ObjectProduccion.push({
             produccionId: empId,
+            empresa: element.nombre,
             registro: newRegistro,
             producto: resultado.producto,
             medida: resultado.medida,

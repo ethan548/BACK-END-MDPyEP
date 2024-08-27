@@ -236,6 +236,7 @@ app.post('/upload/ingresos', upload.single('file'), async (req, res) => {
         throw new Error('Error al procesar el archivo Ingresos');
         // res.status(500).send('Error al procesar el archivo Ingresos');
       }
+      // console.log(resultIngEgre);
       await mainIngreYEgre(resultIngEgre);
       await mainIngreYEgre2();
       console.log("Ingresos cargados");

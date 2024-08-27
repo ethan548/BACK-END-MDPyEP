@@ -1,4 +1,11 @@
 npx prisma migrate dev --name allTables
 npx prisma generate
+
+Update Prisma V1
 npm update @prisma/client
 npm i @prisma/client@latest
+Update Prisma V2
+npm i --save-dev prisma@latest
+npm i @prisma/client@latest 
+
+sudo chmod -R 755 ~/Documentos/DOC\ FLASH/Frond\ Postman_Service

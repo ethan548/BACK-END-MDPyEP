@@ -135,6 +135,7 @@ model tablaEgresosPrVsPy{
   id         Int @id @default(autoincrement())
   empId      Int @unique
   idempresa  tablaIngresosEgresos @relation(fields: [empId], references: [empId])
+  empresa  String
   registro String
   ene Float
   feb Float
@@ -154,6 +155,7 @@ model tablaIngresosPrVsPy{
   id         Int @id @default(autoincrement())
   empId      Int @unique
   idempresa  tablaIngresosEgresos @relation(fields: [empId], references: [empId])
+  empresa String
   registro String
   ene Float
   feb Float
@@ -185,6 +187,7 @@ model tablaIngresosProg {
   empId      Int            @unique
   // Se cambio id por empId
   idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -204,6 +207,7 @@ model tablaIngresosProy {
   empId      Int            @unique
   // se cambio id por empId
   idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -223,6 +227,7 @@ model tablaIngresosEje {
   empId      Int            @unique
   // se cambio id por empId
   idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -242,6 +247,7 @@ model tablaIngresosEje2023 {
   empId      Int            @unique
   // se cambio id por empId
   idempresa  tablaIngresos  @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -270,6 +276,7 @@ model tablaEgresosProg {
   id         Int            @id @default(autoincrement())
   empId      Int            @unique
   idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -288,6 +295,7 @@ model tablaEgresosProy {
   id         Int            @id @default(autoincrement())
   empId      Int            @unique
   idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -306,6 +314,7 @@ model tablaEgresosEj {
   id         Int            @id @default(autoincrement())
   empId      Int            @unique
   idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -324,6 +333,7 @@ model tablaEgresosEj2023 {
   id         Int            @id @default(autoincrement())
   empId      Int            @unique
   idempresa  tablaEgresos   @relation(fields: [empId], references: [empId])
+  empresa    String
   ene        Float
   feb        Float
   mar        Float
@@ -355,6 +365,7 @@ model TablaProduccionPrVsPy{
   id                  Int                   @id @default(autoincrement())
   produccionId        Int
   tablaProduccion     TablaProduccion       @relation(fields: [produccionId], references: [empresaId])
+  empresa             String
   registro            String
   producto            String
   medida              String
@@ -376,6 +387,7 @@ model TablaProduccionProg {
   id                  Int               @id @default(autoincrement())
   produccionId        Int
   tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  empresa             String
   producto            String
   medida              String
   ene                 Float
@@ -395,6 +407,7 @@ model TablaProduccionProy {
   id                  Int               @id @default(autoincrement())
   produccionId        Int
   tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  empresa             String
   producto            String
   medida              String
   ene                 Float
@@ -415,6 +428,7 @@ model TablaProduccionEjec {
   id                  Int               @id @default(autoincrement())
   produccionId        Int
   tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  empresa             String
   producto            String
   medida              String
   ene                 Float
@@ -435,6 +449,7 @@ model TablaProduccionEjec2023 {
   id                  Int               @id @default(autoincrement())
   produccionId        Int
   tablaProduccion     TablaProduccion   @relation(fields: [produccionId], references: [empresaId])
+  empresa             String
   producto            String
   medida              String
   ene                 Float
