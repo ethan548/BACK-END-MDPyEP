@@ -17,14 +17,14 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Configuración de Multer para guardar los archivos con nombres personalizados
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const uploadsDir = resolve(__dirname,'uploads');;
+if(!fs.existsSync(uploadsDir)){
+fs.mkdirSync(uploadsDir, { recursive: true });
+}  
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const uploadsDir = resolve(__dirname,'uploads');;
-    if(!fs.existsSync(uploadsDir)){
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }  
-    console.log(uploadsDir);
+  destination: (req, file, cb) => {   
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
