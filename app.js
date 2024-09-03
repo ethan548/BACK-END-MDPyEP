@@ -1,6 +1,10 @@
 import express from 'express';
 import multer from 'multer';
+import { fileURLToPath } from 'url';
+import { dirname,resolve } from 'path';
 import path from 'path';
+import XLSX from 'xlsx';
+import fs from 'fs';
 import { transform } from './scripts/objectsTransformVentas.js'; 
 import { transformIngreyEgre } from './scripts/IngresosYEgresos2024/main.js';
 import { transformProduccion } from './scripts/Produccion/main.js';
@@ -15,7 +19,13 @@ const prisma = new PrismaClient();
 // Configuración de Multer para guardar los archivos con nombres personalizados
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const uploadsDir = resolve(__dirname,'uploads');;
+    if(!fs.existsSync(uploadsDir)){
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }  
+    console.log(uploadsDir);
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const renameFile = (prefix) => {
@@ -124,107 +134,617 @@ app.post('/upload/ventas', upload.single('file'), async (req, res) => {
     await main2(EmpPrPy)
       // main2(EmpPrPy)]);
     // console.log(EmpPrPyEj);
-    res.status(200).send('Archivo Ventas subido ydatos insertados correctamente');
+    res.status(200).send('Archivo Ventas subido correctamente');
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error al procesar el archivo ventas');
+    res.status(500).send('Error al procesar el archivo Ventas');
   }
 });
 
 app.get('/upload/ventas', async (req,res)=>{
-  const empresasConEmpPrPy= await prisma.empresa.findMany({
-    select:{
-      nombre:true,
-      empPrPy:{
-        select:{
-          registro:true,
-          ene:true,
-          feb:true,
-          mar:true,
-          abr:true,
-          may:true,
-          jun:true,
-          jul:true,
-          ago:true,
-          sep:true,
-          oct:true,
-          nov:true,
-          dic:true
-        }
-      }
-    }
-  })
-  const empresasConEmpPrPyEj= await prisma.empresa.findMany({
-    select:{
-      nombre:true,
-      programado:{
-        select:{
-          // registro:true,
-          ene:true,
-          feb:true,
-          mar:true,
-          abr:true,
-          may:true,
-          jun:true,
-          jul:true,
-          ago:true,
-          sep:true,
-          oct:true,
-          nov:true,
-          dic:true
+  try {
+    const ventas = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        empPrPy:{
+          select:{
+            registro:true,
+            ene:true,
+            feb:true,
+            mar:true,
+            abr:true,
+            may:true,
+            jun:true,
+            jul:true,
+            ago:true,
+            sep:true,
+            oct:true,
+            nov:true,
+            dic:true,
+          }
         }
       },
-      proyectado:{
-        select:{
-          ene:true,
-          feb:true,
-          mar:true,
-          abr:true,
-          may:true,
-          jun:true,
-          jul:true,
-          ago:true,
-          sep:true,
-          oct:true,
-          nov:true,
-          dic:true
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const newVentas = ventas.map((venta) => ({
+      idOrden: venta.idOrden,
+      nombre: venta.nombre,
+      ...venta.empPrPy
+    }));
+    const proy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        proyectado:{
+          select:{
+            ene:true,
+            feb:true,
+            mar:true,
+            abr:true,
+            may:true,
+            jun:true,
+            jul:true,
+            ago:true,
+            sep:true,
+            oct:true,
+            nov:true,
+            dic:true,
+          }
         }
       },
-      ejecutado:{
-        select:{
-          ene:true,
-          feb:true,
-          mar:true,
-          abr:true,
-          may:true,
-          jun:true,
-          jul:true,
-          ago:true,
-          sep:true,
-          oct:true,
-          nov:true,
-          dic:true
-        }
+      orderBy:{
+        idOrden: 'asc'
       }
-    }
-  })
-  res.send(empresasConEmpPrPyEj)
+    });
+    const newProy = proy.map((venta) => ({
+      idOrden: venta.idOrden,
+      nombre: venta.nombre,
+      ...venta.proyectado
+    }));
+    const prog = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        programado:{
+          select:{
+            ene:true,
+            feb:true,
+            mar:true,
+            abr:true,
+            may:true,
+            jun:true,
+            jul:true,
+            ago:true,
+            sep:true,
+            oct:true,
+            nov:true,
+            dic:true,
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const newProg = prog.map((venta) => ({
+      idOrden: venta.idOrden,
+      nombre: venta.nombre,
+      ...venta.programado
+    }));
+    const ejec = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        ejecutado:{
+          select:{
+            ene:true,
+            feb:true,
+            mar:true,
+            abr:true,
+            may:true,
+            jun:true,
+            jul:true,
+            ago:true,
+            sep:true,
+            oct:true,
+            nov:true,
+            dic:true,
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const newEjec = ejec.map((venta) => ({
+      idOrden: venta.idOrden,
+      nombre: venta.nombre,
+      ...venta.ejecutado
+    }));
+    
+    const workbook = XLSX.utils.book_new();
+
+    const ventasSheet = XLSX.utils.json_to_sheet(newVentas);
+    const proySheet = XLSX.utils.json_to_sheet(newProy);
+    const progSheet = XLSX.utils.json_to_sheet(newProg);
+    const ejecSheet = XLSX.utils.json_to_sheet(newEjec);
+    
+    XLSX.utils.book_append_sheet(workbook, ventasSheet, 'VentasPrVsPy');
+    XLSX.utils.book_append_sheet(workbook, proySheet, 'VentasProy');
+    XLSX.utils.book_append_sheet(workbook, progSheet, 'VentasProg');
+    XLSX.utils.book_append_sheet(workbook, ejecSheet, 'VentasEjec');
+
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const filePath = resolve(__dirname,'xlsx/VENTAS.xlsx');
+    XLSX.writeFile(workbook, filePath);
+
+    // Enviar el archivo Excel como respuesta
+    res.download(filePath, 'ventas.xlsx', (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).send('Error al enviar el archivo');
+      } else {
+        // Eliminar el archivo después de enviarlo
+        fs.unlinkSync(filePath);
+      }
+    });
+    // res.status(200).send('Excel generado exitosamente');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al procesar el archivo ventas');
+  }
 })
 
-app.delete('/upload/ventas', async (req,res)=>{
-    const deletePrPy = await prisma.tablaVentasPrVsPy.deleteMany();
-    console.log(`${deletePrPy.count} registros eliminados.`);
-    const deleteAllPro = await prisma.tablaVentasProgramado.deleteMany();
-    console.log(`${deleteAllPro.count} registros eliminados.`);
-    const deleteAllPry = await prisma.tablaVentasProyectado.deleteMany();
-    console.log(`${deleteAllPry.count} registros eliminados.`);
-    const deleteAllEje = await prisma.tablaVentasEjecutado.deleteMany();
-    console.log(`${deleteAllEje.count} registros eliminados.`);
-    const deleteAllEmp = await prisma.Empresa.deleteMany({});
-    console.log(`${deleteAllEmp.count} registros eliminados.`);
-    res.send('Eliminados todos los registros');
-})
 //**************************************** INGRESOS *********************************************/
+app.get('/upload/ingresos', async (req,res)=>{
+  try{
+    const ingresosPrPy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            ingPrPy:{
+              select:{
+                registro:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const egrPrPy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            egrPrPy:{
+              select:{
+                registro:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    //**************** INGRESOS *******************/
+    const ingresosProg = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            ingresos:{
+              select:{
+                ingProg:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const ingresosProy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            ingresos:{
+              select:{
+                ingProy:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const ingresosEj = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            ingresos:{
+              select:{
+                ingEj:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const ingresosEj2023 = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            ingresos:{
+              select:{
+                ingEj2023:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    //******************EGRESOS ********************/
+    const egrProg = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            egresos:{
+              select:{
+                tablaEgrProg:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const egrProy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            egresos:{
+              select:{
+                tablaEgrProy:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+
+    const egrEj = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            egresos:{
+              select:{
+                tablaEgrEj:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+
+    const egrEj2023 = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaIngEgr:{
+          select:{
+            egresos:{
+              select:{
+                tablaEgrEj2023:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+    //************* SANITIZADOS *************** */
+    const newIngresosPrPy = ingresosPrPy.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.ingPrPy
+      };
+    });
+    const newEgresosPrPy = egrPrPy.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.egrPrPy
+      };
+    })
+    const newIngresosProg = ingresosProg.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.ingresos.ingProg
+      };
+    })
+    const newIngresosProy = ingresosProy.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.ingresos.ingProy
+      };
+    })
+    const newIngresosEj = ingresosEj.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.ingresos.ingEj
+      };
+    })
+    const newIngresosEje2023 = ingresosEj2023.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.ingresos.ingEj2023
+      };
+    })
+    const newEgresosProg = egrProg.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.egresos.tablaEgrProg
+      };
+    })
+    const newEgresosProy = egrProy.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.egresos.tablaEgrProy
+      };
+    })
+    const newEgresosEj = egrEj.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.egresos.tablaEgrEj
+      };
+    })
+    const newEgresosEje2023 = egrEj2023.map(empresa => {
+      return {
+          idOrden: empresa.idOrden,
+          nombre: empresa.nombre,
+          ...empresa.tablaIngEgr.egresos.tablaEgrEj2023
+      };
+    })
+    // console.log(newIngresosProg);
+    const workbook = XLSX.utils.book_new();
+
+    const ingPrPySheet = XLSX.utils.json_to_sheet(newIngresosPrPy);
+    const egrPrPySheet = XLSX.utils.json_to_sheet(newEgresosPrPy);
+    const ingProgSheet = XLSX.utils.json_to_sheet(newIngresosProg);
+    const ingProySheet = XLSX.utils.json_to_sheet(newIngresosProy);
+    const ingEjSheet = XLSX.utils.json_to_sheet(newIngresosEj);
+    const ingEj2023Sheet = XLSX.utils.json_to_sheet(newIngresosEje2023);
+    const egrProgSheet = XLSX.utils.json_to_sheet(newEgresosProg);
+    const egrProySheet = XLSX.utils.json_to_sheet(newEgresosProy);
+    const egrEjSheet = XLSX.utils.json_to_sheet(newEgresosEj);
+    const egrEj2023Sheet = XLSX.utils.json_to_sheet(newEgresosEje2023);
+
+    XLSX.utils.book_append_sheet(workbook, ingPrPySheet, 'IngPrVsPy');
+    XLSX.utils.book_append_sheet(workbook, egrPrPySheet, 'EgrPrVsPy');
+    XLSX.utils.book_append_sheet(workbook, ingProgSheet, 'IngProg');
+    XLSX.utils.book_append_sheet(workbook, ingProySheet, 'IngProy');
+    XLSX.utils.book_append_sheet(workbook, ingEjSheet, 'IngEjec');
+    XLSX.utils.book_append_sheet(workbook, ingEj2023Sheet, 'IngEjec2023');
+    XLSX.utils.book_append_sheet(workbook, egrProgSheet, 'EgrProg');
+    XLSX.utils.book_append_sheet(workbook, egrProySheet, 'EgrProy');
+    XLSX.utils.book_append_sheet(workbook, egrEjSheet, 'EgrEjec');
+    XLSX.utils.book_append_sheet(workbook, egrEj2023Sheet, 'EgrEjec2023');  
+
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const filePath = resolve(__dirname,'xlsx/INGRESOS.xlsx');
+    XLSX.writeFile(workbook, filePath);
+
+    res.download(filePath, 'ingresos.xlsx', (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).send('Error al enviar el archivo');
+      } else {
+        // Eliminar el archivo después de enviarlo
+        fs.unlinkSync(filePath);
+      }
+    });
+    // res.send('Excel generado exitosamente');
+  }catch(error){
+    console.error(error);
+    res.status(500).send('Error al procesar el archivo Ingresos');
+  }
+});
+
 app.post('/upload/ingresos', upload.single('file'), async (req, res) => {
     try {
       const file = req.file;
@@ -240,7 +760,7 @@ app.post('/upload/ingresos', upload.single('file'), async (req, res) => {
       await mainIngreYEgre(resultIngEgre);
       await mainIngreYEgre2();
       console.log("Ingresos cargados");
-      res.status(200).send('Archivo Ingresos subido y datos insertados correctamente');
+      res.status(200).send('Archivo Ingresos subido correctamente');
     } catch (error) {
       console.error(error);
       res.status(500).send('Error al procesar el archivo Ingresos');
@@ -277,6 +797,251 @@ app.delete('/upload/ingresos', async (req,res)=>{
   }
 })
 //**************************************** PRODUCCION *********************************************/
+app.get('/upload/produccion', async (req,res)=>{
+  try {
+    const produccion = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaProduccion:{
+          select:{
+            tablaProdPrVsPy:{
+              select:{
+                registro:true,
+                producto:true,
+                medida:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              },
+              orderBy:{
+                producto: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+
+    const produccionProy = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaProduccion:{
+          select:{
+            tablaProyProduc:{
+              select:{
+                producto:true,
+                medida:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              },
+              orderBy:{
+                producto: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+    
+    const produccionProg = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaProduccion:{
+          select:{
+            tablaProgProduc:{
+              select:{
+                producto:true,
+                medida:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              },
+              orderBy:{
+                producto: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+
+    const produccionEjc = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaProduccion:{
+          select:{
+            tablaEjeProduc:{
+              select:{
+                producto:true,
+                medida:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              },
+              orderBy:{
+                producto: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+    
+    const produccionEjc2023 = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaProduccion:{
+          select:{
+            tablaEje2023Produc:{
+              select:{
+                producto:true,
+                medida:true,
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              },
+              orderBy:{
+                producto: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+
+    const newProducc = produccion.map(({ tablaProduccion, ...rest }) => {
+      const flattened = tablaProduccion.flatMap(({ tablaProdPrVsPy }) => tablaProdPrVsPy);
+      return flattened.map(item => ({ ...rest, ...item }));
+    }).flat();
+    
+    const newProy = produccionProy.map(({ tablaProduccion, ...rest }) => {
+      const flattened = tablaProduccion.flatMap(({ tablaProyProduc }) => tablaProyProduc);
+      return flattened.map(item => ({ ...rest, ...item }));
+    }).flat();
+    
+    const newProg = produccionProg.map(({ tablaProduccion, ...rest }) => {
+      const flattened = tablaProduccion.flatMap(({ tablaProgProduc }) => tablaProgProduc);
+      return flattened.map(item => ({ ...rest, ...item }));
+    }).flat();
+
+    const newEjec = produccionEjc.map(({ tablaProduccion, ...rest }) => {
+      const flattened = tablaProduccion.flatMap(({ tablaEjeProduc }) => tablaEjeProduc);
+      return flattened.map(item => ({ ...rest, ...item }));
+    }).flat();
+    
+    const newEjec2023 = produccionEjc2023.map(({ tablaProduccion, ...rest }) => {
+      const flattened = tablaProduccion.flatMap(({ tablaEje2023Produc }) => tablaEje2023Produc);
+      return flattened.map(item => ({ ...rest, ...item }));
+    }).flat();
+
+    const workbook = XLSX.utils.book_new();
+    
+    const prodSheet = XLSX.utils.json_to_sheet(newProducc);
+    const proySheet = XLSX.utils.json_to_sheet(newProy);
+    const progSheet = XLSX.utils.json_to_sheet(newProg);
+    const ejecSheet = XLSX.utils.json_to_sheet(newEjec);
+    const ejec2023Sheet = XLSX.utils.json_to_sheet(newEjec2023);
+
+    XLSX.utils.book_append_sheet(workbook, prodSheet, 'ProduccionPrVsPy');
+    XLSX.utils.book_append_sheet(workbook, proySheet, 'ProduccionProy');
+    XLSX.utils.book_append_sheet(workbook, progSheet, 'ProduccionProg');
+    XLSX.utils.book_append_sheet(workbook, ejecSheet, 'ProduccionEjec');
+    XLSX.utils.book_append_sheet(workbook, ejec2023Sheet, 'ProduccionEjecAnterior');
+
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const filePath = resolve(__dirname,'xlsx/PRODUCCION.xlsx');
+    XLSX.writeFile(workbook, filePath);
+
+    // Enviar el archivo Excel como respuesta
+    // res.download(filePath, 'ventas.xlsx', (err) => {
+    //   if (err) {
+    //     console.error('Error al enviar el archivo:', err);
+    //     res.status(500).send('Error al enviar el archivo');
+    //   } else {
+      //     // Eliminar el archivo después de enviarlo
+    //     fs.unlinkSync(filePath);
+    //   }
+    // });
+    res.download(filePath, 'produccion.xlsx', (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).send('Error al enviar el archivo');
+      } else {
+        // Eliminar el archivo después de enviarlo
+        fs.unlinkSync(filePath);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al procesar el archivo ventas');
+  }
+})
 app.post('/upload/produccion', upload.single('file'), async (req, res) => {
   // Hay que guardar bien el archivo de resumen de seccion de ventas por que
   // consume de uploads/form_julio_ventas.xlsx
@@ -310,13 +1075,186 @@ app.delete('/upload/produccion', async (req,res)=>{
     // Luego, eliminar los datos de la tabla principal de producción
     const allDeleted = await prisma.TablaProduccion.deleteMany({});
     console.log(`${allDeleted.count} registros eliminados.`);
-    res.status(200).send('Eliminados todos los registros');
+    res.status(200).send('Eliminados todos los registros de Produccion');
   } catch (error) {
     console.log("Error", error);
     res.status(500).send('Error al procesar el archivo Produccion');
   }
 })
 //**************************************** SALDOS *********************************************/
+app.get('/upload/saldos', async (req,res)=>{
+  try {
+    const saldosDisponible = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaSaldos:{
+          select:{
+            disponible:{
+              select:{
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const saldosInventarios = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaSaldos:{
+          select:{
+            inventarios:{
+              select:{
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const saldosCobrar = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaSaldos:{
+          select:{
+            cobrar:{
+              select:{
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+    const saldosPagar = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaSaldos:{
+          select:{
+            pagar:{
+              select:{
+                ene:true,
+                feb:true,
+                mar:true,
+                abr:true,
+                may:true,
+                jun:true,
+                jul:true,
+                ago:true,
+                sep:true,
+                oct:true,
+                nov:true,
+                dic:true,
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    })
+
+    const newDisponible = saldosDisponible.map(empresa => ({
+      idOrden: empresa.idOrden,
+      nombre: empresa.nombre,
+      ...empresa.tablaSaldos.disponible
+    }));
+    const newInventarios = saldosInventarios.map(empresa => ({
+      idOrden: empresa.idOrden,
+      nombre: empresa.nombre,
+      ...empresa.tablaSaldos.inventarios
+    }));
+    const newCobrar = saldosCobrar.map(empresa => ({
+      idOrden: empresa.idOrden,
+      nombre: empresa.nombre,
+      ...empresa.tablaSaldos.cobrar
+    }));
+    const newPagar = saldosPagar.map(empresa => ({
+      idOrden: empresa.idOrden,
+      nombre: empresa.nombre,
+      ...empresa.tablaSaldos.pagar
+    }));
+
+    const workbook = XLSX.utils.book_new();
+
+    const saldosSheet = XLSX.utils.json_to_sheet(newDisponible);
+    const inventariosSheet = XLSX.utils.json_to_sheet(newInventarios);
+    const cobrarSheet = XLSX.utils.json_to_sheet(newCobrar);
+    const pagarSheet = XLSX.utils.json_to_sheet(newPagar);
+
+    XLSX.utils.book_append_sheet(workbook, saldosSheet, 'DISPONIBLE');
+    XLSX.utils.book_append_sheet(workbook, inventariosSheet, 'INVENTARIOS');
+    XLSX.utils.book_append_sheet(workbook, cobrarSheet, 'COBRAR');
+    XLSX.utils.book_append_sheet(workbook, pagarSheet, 'PAGAR');
+
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const filePath = resolve(__dirname,'xlsx/SALDOS.xlsx');
+    XLSX.writeFile(workbook, filePath);
+
+    // Enviar el archivo Excel como respuesta
+    res.download(filePath, 'saldos.xlsx', (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).send('Error al enviar el archivo');
+      } else {
+        // Eliminar el archivo después de enviarlo
+        fs.unlinkSync(filePath);
+      }
+    });
+    // res.status(200).send('Excel generado exitosamente');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al procesar el archivo Saldos');
+  }
+})
+
 app.post('/upload/saldos', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
@@ -327,7 +1265,7 @@ app.post('/upload/saldos', upload.single('file'), async (req, res) => {
       throw new Error('Error al procesar el archivo Saldos');
     }
     await mainSaldos(resultSaldos);
-    res.status(200).send('Archivo Saldos subido y datos insertados correctamente');
+    res.status(200).send('Archivo Saldos subido correctamente');
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al procesar el archivo Saldos');
@@ -346,7 +1284,7 @@ app.delete('/upload/saldos', async (req,res)=>{
     // Finalmente, eliminar datos de tablaSaldos
     const allDeleted = await prisma.tablaSaldos.deleteMany({});
     console.log(`${allDeleted.count} registros eliminados.`);
-    res.status(200).send('Eliminados todos los registros');  
+    res.status(200).send('Eliminados todos los registros de Saldos');  
   } catch (error) {
     console.log("Error", error);
     res.status(500).send('Error al procesar el archivo Saldos');    
@@ -354,12 +1292,163 @@ app.delete('/upload/saldos', async (req,res)=>{
   
 })
 //**************************************** CAPACIDAD *********************************************/
+app.get('/upload/capacidad', async (req, res) => {
+  try {
+    const capacidad = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaCapacidad:{
+          select:{
+            lineas:{
+              select:{
+                linea:true,
+                cantidad:{
+                  select:{
+                    cantidad:true
+                  }
+                },
+                medida:{
+                  select:{
+                    medida:true
+                  }
+                },
+                eje:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              },
+              orderBy:{
+                linea: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const capacidadProg = await prisma.Empresa.findMany({
+      select:{
+        idOrden: true,
+        nombre:true,
+        tablaCapacidad:{
+          select:{
+            lineas:{
+              select:{
+                linea:true,
+                cantidad:{
+                  select:{
+                    cantidad:true
+                  }
+                },
+                medida:{
+                  select:{
+                    medida:true
+                  }
+                },
+                prg:{
+                  select:{
+                    ene:true,
+                    feb:true,
+                    mar:true,
+                    abr:true,
+                    may:true,
+                    jun:true,
+                    jul:true,
+                    ago:true,
+                    sep:true,
+                    oct:true,
+                    nov:true,
+                    dic:true,
+                  }
+                }
+              },
+              orderBy:{
+                linea: 'asc'
+              }
+            }
+          }
+        }
+      },
+      orderBy:{
+        idOrden: 'asc'
+      }
+    });
+    const result = capacidad.map(empresa => {
+      return empresa.tablaCapacidad.flatMap(tabla => {
+          return tabla.lineas.map(linea => {
+              return {
+                  idOrden: empresa.idOrden,
+                  nombre: empresa.nombre,
+                  cantidad: linea.cantidad.cantidad,
+                  medida: linea.medida.medida,
+                  linea: linea.linea,
+                  ...linea.eje
+              };
+          });
+      });
+    }).flat();
+    const resultProg = capacidadProg.map(empresa => {
+      return empresa.tablaCapacidad.flatMap(tabla => {
+          return tabla.lineas.map(linea => {
+              return {
+                  idOrden: empresa.idOrden,
+                  nombre: empresa.nombre,
+                  cantidad: linea.cantidad.cantidad,
+                  medida: linea.medida.medida,
+                  linea: linea.linea,
+                  ...linea.prg
+              };
+          });
+      });
+    }).flat();
+    // console.log(result);
+    const workbook = XLSX.utils.book_new();
+
+    const resultSheet = XLSX.utils.json_to_sheet(result);
+    const resultSheetProg = XLSX.utils.json_to_sheet(resultProg);
+    // console.log(resultSheet);
+    XLSX.utils.book_append_sheet(workbook, resultSheet, 'CapacidadEjec');
+    XLSX.utils.book_append_sheet(workbook, resultSheetProg, 'CapacidadProg');
+
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const filePath = resolve(__dirname,'xlsx/CAPACIDAD.xlsx');
+    XLSX.writeFile(workbook, filePath);
+    
+    res.download(filePath, 'capacidad.xlsx', (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).send('Error al enviar el archivo');
+      } else {
+        // Eliminar el archivo después de enviarlo
+        fs.unlinkSync(filePath);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al procesar el archivo Capacidad');
+  }
+})
 app.post('/upload/capacidad', async (req, res) => {
   try {
     const resultCapacidad = transformCapacidad("./uploads/FORM_VENTAS.xlsx");
     await mainCapacidad(resultCapacidad);
     console.log("Archivos Capacidad cargada exitosamente");
-    res.status(200).send('Archivo Capacidad subido y datos insertados correctamente');
+    res.status(200).send('Archivo Capacidad subido correctamente');
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al procesar el archivo Capacidad');
@@ -376,7 +1465,7 @@ app.delete('/upload/capacidad', async (req,res)=>{
     // Luego, eliminar los datos de la tabla principal de producción
     const allDeleted =  await prisma.tablaCapacidad.deleteMany({});
     console.log(`${allDeleted.count} registros eliminados de capacidad.`);
-    res.status(200).send('Eliminados todos los registros');
+    res.status(200).send('Eliminados todos los registros de Capacidad');
   } catch (error) {
     console.log("Error: ",error);
     res.status(500).send('Error al procesar el archivo Capacidad');

@@ -16,6 +16,17 @@ const keys = {
   "EEPAF":12,
   "INBOL":13
 }
+function validateAndConvert(value) {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  if (typeof value === 'string') {
+    const sanitizedValue = value.replace(/,/g, '');
+    // console.log(sanitizedValue,parseFloat(sanitizedValue));
+    return parseFloat(sanitizedValue) || 0;
+  }
+  return value;
+}
 export async function main(EmpPrPyEj){
   const promesas = EmpPrPyEj.map(async element => {
     // console.log(keys[element.empresa],element.empresa);
@@ -433,16 +444,23 @@ export async  function mainProduccion(myNewObject) {
 
       // Preparar los datos para tablaProyProduc
       const proyOperations = element.productos.map((producto, i) => {
-          return {
+        const mesesConValoresPorDefecto = {
+          ene: 0.00, feb: 0.00, mar: 0.00, abr: 0.00, may: 0.00, jun: 0.00,
+          jul: 0.00, ago: 0.00, sep: 0.00, oct: 0.00, nov: 0.00, dic: 0.00
+        };  
+        
+        const datosMeses = element.pys[i].reduce((acc, curr, index) => {
+          const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][index];
+          acc[mes] = curr;
+          return acc;
+        }, mesesConValoresPorDefecto);
+
+        return {
             produccionId: produccion.empresaId,  // Cambiado a produccionId
             empresa: element.empresa,
             producto,
             medida: element.medidas[i],
-            ...element.pys[i].reduce((acc, curr, index) => {
-              const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][index];
-              acc[mes] = curr;
-              return acc;
-            }, {})
+            ...datosMeses
           };
       });
 
@@ -539,15 +557,16 @@ export async function mainProduccion2() {
         let newRegistro = null
         let resultado = null
         if(produccionProg[index].producto == produccionProy[index].producto){
-          if(produccionProy[index]['ene'] == 0){
-            newRegistro = 'pr'
-            resultado = produccionProg[index]
-          }
-          if((produccionProg[index]['ene']!=produccionProy[index]['ene'] && produccionProy[index]['ene']!=0)||(produccionProg[index]['ene']==produccionProy[index]['ene'])){
+          const {id,produccionId,empresa,producto,medida,...meses} = produccionProy[index];
+          const sum = Object.values(meses).reduce((a,b)=>a+b,0);
+          if(sum > 0){
             newRegistro = 'py'
             resultado = produccionProy[index]
-
           }
+          else{
+            newRegistro = 'pr'
+            resultado = produccionProg[index]
+          }            
           // console.log(element);
           ObjectProduccion.push({
             produccionId: empId,
@@ -576,23 +595,23 @@ export async function mainProduccion2() {
   await prisma.tablaProduccionPrVsPy.createMany({
     data: ObjectProduccion
   })
-  // console.log("datos guardados correctamente");
+  console.log("datos guardados correctamente");
 }
 
 export async function mainSaldos(saldos) {
   const createMonthlyData = (data) => ({
-    ene: data[0],
-    feb: data[1],
-    mar: data[2],
-    abr: data[3],
-    may: data[4],
-    jun: data[5],
-    jul: data[6],
-    ago: data[7],
-    sep: data[8],
-    oct: data[9],
-    nov: data[10],
-    dic: data[11]
+    ene: validateAndConvert(data[0]),
+    feb: validateAndConvert(data[1]),
+    mar: validateAndConvert(data[2]),
+    abr: validateAndConvert(data[3]),
+    may: validateAndConvert(data[4]),
+    jun: validateAndConvert(data[5]),
+    jul: validateAndConvert(data[6]),
+    ago: validateAndConvert(data[7]),
+    sep: validateAndConvert(data[8]),
+    oct: validateAndConvert(data[9]),
+    nov: validateAndConvert(data[10]),
+    dic: validateAndConvert(data[11])
   });
 
   try {
