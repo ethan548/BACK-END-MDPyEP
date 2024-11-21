@@ -17,14 +17,14 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Configuración de Multer para guardar los archivos con nombres personalizados
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const uploadsDir = resolve(__dirname,'uploads');;
-if(!fs.existsSync(uploadsDir)){
-fs.mkdirSync(uploadsDir, { recursive: true });
-}  
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {   
+  destination: (req, file, cb) => {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const uploadsDir = resolve(__dirname,'uploads');;
+    if(!fs.existsSync(uploadsDir)){
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }  
+    console.log(uploadsDir);
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
@@ -277,20 +277,13 @@ app.get('/upload/ventas', async (req,res)=>{
     XLSX.utils.book_append_sheet(workbook, progSheet, 'VentasProg');
     XLSX.utils.book_append_sheet(workbook, ejecSheet, 'VentasEjec');
 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const filePath = resolve(__dirname,'xlsx/VENTAS.xlsx');
-    XLSX.writeFile(workbook, filePath);
+    // Generar el archivo Excel en formato binario
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
     // Enviar el archivo Excel como respuesta
-    res.download(filePath, 'ventas.xlsx', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-        res.status(500).send('Error al enviar el archivo');
-      } else {
-        // Eliminar el archivo después de enviarlo
-        fs.unlinkSync(filePath);
-      }
-    });
+    res.setHeader('Content-Disposition', 'attachment; filename=VENTAS.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(excelBuffer);
     // res.status(200).send('Excel generado exitosamente');
   } catch (error) {
     console.error(error);
@@ -725,19 +718,13 @@ app.get('/upload/ingresos', async (req,res)=>{
     XLSX.utils.book_append_sheet(workbook, egrEjSheet, 'EgrEjec');
     XLSX.utils.book_append_sheet(workbook, egrEj2023Sheet, 'EgrEjec2023');  
 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const filePath = resolve(__dirname,'xlsx/INGRESOS.xlsx');
-    XLSX.writeFile(workbook, filePath);
+    // Generar el archivo Excel en formato binario
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-    res.download(filePath, 'ingresos.xlsx', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-        res.status(500).send('Error al enviar el archivo');
-      } else {
-        // Eliminar el archivo después de enviarlo
-        fs.unlinkSync(filePath);
-      }
-    });
+    // Enviar el archivo Excel como respuesta
+    res.setHeader('Content-Disposition', 'attachment; filename=INGRESOS.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(excelBuffer);
     // res.send('Excel generado exitosamente');
   }catch(error){
     console.error(error);
@@ -1014,29 +1001,13 @@ app.get('/upload/produccion', async (req,res)=>{
     XLSX.utils.book_append_sheet(workbook, ejecSheet, 'ProduccionEjec');
     XLSX.utils.book_append_sheet(workbook, ejec2023Sheet, 'ProduccionEjecAnterior');
 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const filePath = resolve(__dirname,'xlsx/PRODUCCION.xlsx');
-    XLSX.writeFile(workbook, filePath);
+    // Generar el archivo Excel en formato binario
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
     // Enviar el archivo Excel como respuesta
-    // res.download(filePath, 'ventas.xlsx', (err) => {
-    //   if (err) {
-    //     console.error('Error al enviar el archivo:', err);
-    //     res.status(500).send('Error al enviar el archivo');
-    //   } else {
-      //     // Eliminar el archivo después de enviarlo
-    //     fs.unlinkSync(filePath);
-    //   }
-    // });
-    res.download(filePath, 'produccion.xlsx', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-        res.status(500).send('Error al enviar el archivo');
-      } else {
-        // Eliminar el archivo después de enviarlo
-        fs.unlinkSync(filePath);
-      }
-    });
+    res.setHeader('Content-Disposition', 'attachment; filename=PRODUCCION.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(excelBuffer);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al procesar el archivo ventas');
@@ -1234,21 +1205,13 @@ app.get('/upload/saldos', async (req,res)=>{
     XLSX.utils.book_append_sheet(workbook, cobrarSheet, 'COBRAR');
     XLSX.utils.book_append_sheet(workbook, pagarSheet, 'PAGAR');
 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const filePath = resolve(__dirname,'xlsx/SALDOS.xlsx');
-    XLSX.writeFile(workbook, filePath);
+    // Generar el archivo Excel en formato binario
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
     // Enviar el archivo Excel como respuesta
-    res.download(filePath, 'saldos.xlsx', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-        res.status(500).send('Error al enviar el archivo');
-      } else {
-        // Eliminar el archivo después de enviarlo
-        fs.unlinkSync(filePath);
-      }
-    });
-    // res.status(200).send('Excel generado exitosamente');
+    res.setHeader('Content-Disposition', 'attachment; filename=SALDOS.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(excelBuffer);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al procesar el archivo Saldos');
@@ -1425,19 +1388,13 @@ app.get('/upload/capacidad', async (req, res) => {
     XLSX.utils.book_append_sheet(workbook, resultSheet, 'CapacidadEjec');
     XLSX.utils.book_append_sheet(workbook, resultSheetProg, 'CapacidadProg');
 
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const filePath = resolve(__dirname,'xlsx/CAPACIDAD.xlsx');
-    XLSX.writeFile(workbook, filePath);
-    
-    res.download(filePath, 'capacidad.xlsx', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-        res.status(500).send('Error al enviar el archivo');
-      } else {
-        // Eliminar el archivo después de enviarlo
-        fs.unlinkSync(filePath);
-      }
-    });
+    // Generar el archivo Excel en formato binario
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // Enviar el archivo Excel como respuesta
+    res.setHeader('Content-Disposition', 'attachment; filename=CAPACIDAD.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(excelBuffer);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al procesar el archivo Capacidad');
